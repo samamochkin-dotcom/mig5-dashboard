@@ -216,6 +216,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Service account JSON (никогда не коммитить!)
+# Service account JSON и Sheet ID (никогда не коммитить!)
 .streamlit/service_account.json
+.streamlit/sheet_id.txt
 *.json.bak

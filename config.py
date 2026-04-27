@@ -9,7 +9,26 @@
 from datetime import date
 
 # ── Источник данных ──────────────────────────────────────────────────────────
-SHEET_ID = "1m9dn_q2K8p8S1ixWr6kqhAn00-dFlCL2DHD5vjlGBAk"
+# ID берётся из Streamlit secrets (на проде) или fallback из локального файла
+# C:\Users\MamochkinSA\Desktop\Claude\MiG-5\7_Dashboards\mig5-dashboard\.streamlit\sheet_id.txt
+# чтобы не светить ID в публичном репозитории.
+def _load_sheet_id() -> str:
+    try:
+        import streamlit as st
+        if "sheet_id" in st.secrets:
+            return str(st.secrets["sheet_id"])
+    except Exception:
+        pass
+    from pathlib import Path
+    f = Path(__file__).parent / ".streamlit" / "sheet_id.txt"
+    if f.exists():
+        return f.read_text(encoding="utf-8").strip()
+    raise RuntimeError(
+        "SHEET_ID не найден. Создай .streamlit/sheet_id.txt с ID таблицы "
+        "(локально) или добавь sheet_id = \"...\" в Streamlit Cloud secrets."
+    )
+
+SHEET_ID = _load_sheet_id()
 SHEET_TAB = "Замечания"
 
 # ── Параметры проекта ────────────────────────────────────────────────────────

@@ -200,23 +200,23 @@ with st.container():
         """
         if label_position == "above":
             triangle = (
-                f'<div style="position:absolute; left:50%; top:42px; '
+                f'<div style="position:absolute; left:50%; top:30px; '
                 f'transform:translateX(-50%); width:0; height:0; '
                 f'border-left:6px solid transparent; border-right:6px solid transparent; '
                 f'border-bottom:9px solid {color};"></div>'
             )
-            label_top = "-26px"
+            label_top = "-22px"
         else:
             triangle = (
-                f'<div style="position:absolute; left:50%; top:-21px; '
+                f'<div style="position:absolute; left:50%; top:-9px; '
                 f'transform:translateX(-50%); width:0; height:0; '
                 f'border-left:6px solid transparent; border-right:6px solid transparent; '
                 f'border-top:9px solid {color};"></div>'
             )
-            label_top = "56px"
+            label_top = "40px"
         line = (
-            f'<div style="position:absolute; left:50%; top:-12px; '
-            f'width:3px; height:54px; background:{color}; '
+            f'<div style="position:absolute; left:50%; top:0; '
+            f'width:3px; height:30px; background:{color}; '
             f'transform:translateX(-50%); border-radius:2px;"></div>'
         )
         label_html = (
@@ -257,10 +257,10 @@ with st.container():
             <div style="position:absolute; left:0; top:0; bottom:0; width:{time_pct}%;
                         background:linear-gradient(90deg, {config.COLOR_INFO}, {config.COLOR_SUCCESS});
                         border-radius:6px; z-index:1;"></div>
-            <div style="position:absolute; left:{time_pct}%; top:-12px; height:54px; width:3px;
+            <div style="position:absolute; left:{time_pct}%; top:0; height:30px; width:3px;
                         background:{config.COLOR_PRIMARY}; z-index:2; transform:translateX(-50%);
                         border-radius:2px;"></div>
-            <div style="position:absolute; left:{time_pct}%; top:-26px; transform:translateX(-50%);
+            <div style="position:absolute; left:{time_pct}%; top:-22px; transform:translateX(-50%);
                         font-size:11px; font-weight:700; color:{config.COLOR_PRIMARY}; white-space:nowrap;">
               сегодня
             </div>

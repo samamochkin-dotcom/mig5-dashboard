@@ -1,0 +1,17 @@
+[theme]
+base = "light"
+primaryColor = "#1a3a5c"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f4f6f8"
+textColor = "#1a3a5c"
+font = "sans serif"
+
+[server]
+runOnSave = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Скрываем меню/тулбар у зрителей — чтобы не было кнопок Rerun/Settings/Deploy
+toolbarMode = "minimal"

@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -216,3 +215,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Service account JSON (никогда не коммитить!)
+.streamlit/service_account.json
+*.json.bak

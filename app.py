@@ -147,29 +147,33 @@ if data_meta["source"] == "mock" and data_meta["error"]:
     st.error(f"⚠️ Не удалось загрузить из Google Sheet: {data_meta['error']}. "
              f"Показаны mock-данные.")
 
-# ── KPI-ряд ──────────────────────────────────────────────────────────────────
-def _kpi(col, value, label, accent):
-    col.markdown(
-        f"""
-        <div style="background: white; border-radius: 14px;
-                    padding: 26px 18px; text-align: center;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-                    border-top: 5px solid {accent}; height: 100%;">
-          <div style="font-size: 50px; font-weight: 800; color: {config.COLOR_PRIMARY}; line-height: 1;">
-            {value}
-          </div>
-          <div style="font-size: 14px; color: #7f8c8d; margin-top: 10px;">{label}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
+# ── KPI-ряд (CSS grid с авто-переносом — не ломается на узких экранах) ──────
+def _kpi_card(value, label, accent) -> str:
+    return (
+        f'<div style="background:white; border-radius:14px; '
+        f'padding:22px 14px; text-align:center; '
+        f'box-shadow:0 2px 8px rgba(0,0,0,0.06); '
+        f'border-top:5px solid {accent};">'
+        f'<div style="font-size:clamp(28px, 4.2vw, 50px); font-weight:800; '
+        f'color:{config.COLOR_PRIMARY}; line-height:1;">{value}</div>'
+        f'<div style="font-size:13px; color:#7f8c8d; margin-top:10px; '
+        f'line-height:1.3;">{label}</div>'
+        f'</div>'
     )
 
-c1, c2, c3, c4, c5 = st.columns(5)
-_kpi(c1, total,    "Всего замечаний",          config.COLOR_PRIMARY)
-_kpi(c2, zakryto,  "Закрыто",                  config.COLOR_SUCCESS)
-_kpi(c3, v_rabote, "В работе",                 config.COLOR_WARNING)
-_kpi(c4, f"{pct}%", "Устранено",               config.COLOR_INFO)
-_kpi(c5, days_left, "Рабочих дней до выхода из МГЭ", config.COLOR_DANGER)
+kpi_cards = "".join([
+    _kpi_card(total,     "Всего замечаний",                config.COLOR_PRIMARY),
+    _kpi_card(zakryto,   "Закрыто",                        config.COLOR_SUCCESS),
+    _kpi_card(v_rabote,  "В работе",                       config.COLOR_WARNING),
+    _kpi_card(f"{pct}%", "Устранено",                      config.COLOR_INFO),
+    _kpi_card(days_left, "Рабочих дней до выхода из МГЭ",  config.COLOR_DANGER),
+])
+st.markdown(
+    f'<div style="display:grid; '
+    f'grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); '
+    f'gap:14px; margin-bottom:6px;">{kpi_cards}</div>',
+    unsafe_allow_html=True,
+)
 
 st.markdown("&nbsp;", unsafe_allow_html=True)
 
@@ -248,7 +252,7 @@ with st.container():
 
     st.markdown(
         f"""
-        <div style="margin: 32px 0 32px 0; padding-right: 6px;">
+        <div style="margin: 32px 0 32px 0; padding: 0 70px;">
           <div style="position:relative; height:30px; background:#ecf0f1; border-radius:6px; overflow:visible;">
             <div style="position:absolute; left:0; top:0; bottom:0; width:{time_pct}%;
                         background:linear-gradient(90deg, {config.COLOR_INFO}, {config.COLOR_SUCCESS});

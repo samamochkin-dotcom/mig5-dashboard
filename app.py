@@ -22,7 +22,7 @@ from lib.calc import (
     working_days_until,
 )
 from lib.charts import dynamics_chart
-from lib.data import get_data
+from lib.data import get_data, split_types, zona_bucket
 
 # ── Настройки страницы ────────────────────────────────────────────────────────
 st.set_page_config(
@@ -78,7 +78,15 @@ sel_experts = st.sidebar.multiselect(
 statuses = sorted([s for s in df["status"].dropna().unique() if s]) if "status" in df.columns else []
 sel_statuses = st.sidebar.multiselect("Статус", statuses, default=[], key="f_status")
 
-types_ = sorted([t for t in df["type"].dropna().unique() if t]) if "type" in df.columns else []
+# Типы строим из РАЗБИТЫХ значений (многозначные ячейки H через запятую —
+# каждый тип отдельно, как в отчёте/МиГ-6).
+if "type" in df.columns:
+    _all_types_set = set()
+    for _cell in df["type"].dropna():
+        _all_types_set.update(split_types(_cell))
+    types_ = sorted(_all_types_set)
+else:
+    types_ = []
 all_types = st.sidebar.checkbox("Все типы", value=True,
                                 help="Снять галку чтобы выбрать конкретные типы",
                                 key="f_all_types")
@@ -96,7 +104,9 @@ if sel_experts:
 if sel_statuses:
     df_f = df_f[df_f["status"].isin(sel_statuses)]
 if sel_types:
-    df_f = df_f[df_f["type"].isin(sel_types)]
+    # Строка подходит, если хоть один её тип входит в выбранные (по разбивке)
+    _sel = set(sel_types)
+    df_f = df_f[df_f["type"].apply(lambda c: bool(_sel & set(split_types(c))))]
 
 # ── Метрики (по фильтрованным данным) ────────────────────────────────────────
 total = len(df_f)
@@ -366,6 +376,77 @@ with right:
             f"</div>",
             unsafe_allow_html=True,
         )
+
+st.markdown("---")
+
+# ── Состояние замечаний по типам (как в отчёте/МиГ-6) ─────────────────────────
+st.markdown("#### 🏷️ Состояние замечаний по типам")
+
+if "type" in df_f.columns:
+    from collections import Counter
+    _t_total, _t_closed = Counter(), Counter()
+    for _, _r in df_f.iterrows():
+        _types = split_types(_r.get("type"))
+        if not _types:
+            _types = ["Не указано"]
+        _is_closed = str(_r.get("status", "")).strip() == "Закрыто"
+        _zona = _r.get("zona", "") if "zona" in df_f.columns else ""
+        for _t in _types:
+            # «Сутевое» разбиваем по зоне ответственности
+            _key = f'Сутевое «{zona_bucket(_zona)}»' if _t == "Сутевое" else _t
+            _t_total[_key] += 1
+            if _is_closed:
+                _t_closed[_key] += 1
+
+    # Сортировка: три «Сутевое» держим вместе, внутри — Горпроект/Заказчик/Остальные
+    _sut_order = {'Сутевое «Горпроект»': 0, 'Сутевое «Заказчик»': 1, 'Сутевое «Остальные»': 2}
+    _sut_sum = sum(_t_total.get(s, 0) for s in _sut_order)
+    def _type_sort(kv):
+        name, tot = kv
+        if name in _sut_order:
+            return (-_sut_sum, 0, _sut_order[name])
+        return (-tot, 1, name)
+    _items = sorted(_t_total.items(), key=_type_sort)
+
+    _rows = []
+    for _name, _tot in _items:
+        _cl = _t_closed.get(_name, 0)
+        _left = _tot - _cl
+        _rows.append(
+            "<tr>"
+            f'<td style="padding:8px 12px;border-bottom:1px solid #eef1f4;">{_name}</td>'
+            f'<td style="padding:8px 12px;border-bottom:1px solid #eef1f4;text-align:center;">{_tot}</td>'
+            f'<td style="padding:8px 12px;border-bottom:1px solid #eef1f4;text-align:center;color:#27ae60;font-weight:600;">{_cl}</td>'
+            f'<td style="padding:8px 12px;border-bottom:1px solid #eef1f4;text-align:center;color:#e67e22;font-weight:600;">{_left}</td>'
+            "</tr>"
+        )
+    _tot_all = sum(_t_total.values())
+    _cl_all  = sum(_t_closed.values())
+    _rows.append(
+        '<tr style="background:#d6dfe9;font-weight:700;">'
+        '<td style="padding:9px 12px;">Итого</td>'
+        f'<td style="padding:9px 12px;text-align:center;">{_tot_all}</td>'
+        f'<td style="padding:9px 12px;text-align:center;">{_cl_all}</td>'
+        f'<td style="padding:9px 12px;text-align:center;">{_tot_all - _cl_all}</td>'
+        "</tr>"
+    )
+    st.markdown(
+        '<table style="width:100%;border-collapse:collapse;font-size:13px;'
+        'border:1px solid #e1e6ec;border-radius:8px;overflow:hidden;">'
+        '<thead><tr style="background:#1a3a5c;color:#fff;">'
+        '<th style="padding:10px 12px;text-align:left;">Тип замечания</th>'
+        '<th style="padding:10px 12px;text-align:center;">Всего</th>'
+        '<th style="padding:10px 12px;text-align:center;">Закрыто</th>'
+        '<th style="padding:10px 12px;text-align:center;">Осталось снять</th>'
+        '</tr></thead><tbody>'
+        + "".join(_rows) +
+        '</tbody></table>'
+        '<div style="font-size:11px;color:#95a5a6;margin-top:6px;">'
+        'Ячейки с несколькими типами через запятую считаются по каждому типу. '
+        '«Сутевое» разбито по зоне ответственности (Горпроект / Заказчик / Остальные).'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("---")
 

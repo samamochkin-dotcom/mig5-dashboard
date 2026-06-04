@@ -20,7 +20,6 @@ COL_MAP = {
     "razdel":   "раздел",
     "soderzh":  "замечания",
     "type":     "анализ по типам",
-    "zona":     "зона",          # F: Зона ответственности — для разбивки «Сутевого»
     "status":   "статус",
     "date_out": "дата снятия",
 }
@@ -38,30 +37,6 @@ def _has_secrets() -> bool:
         return "gcp_service_account" in st.secrets
     except Exception:
         return False
-
-
-def split_types(cell) -> list:
-    """Разбивает ячейку столбца «Анализ по типам» на отдельные типы.
-
-    Логика как в expertise_report (МиГ-6): несколько типов в одной ячейке
-    через запятую или перенос строки считаются раздельно.
-    «АГР, Отсылка к ФЗ, ЗнП» → ['АГР', 'Отсылка к ФЗ', 'ЗнП'].
-    """
-    raw = "" if cell is None else str(cell).strip()
-    if not raw or raw.lower() == "nan":
-        return []
-    return [p.strip() for p in raw.replace("\n", ",").split(",") if p.strip()]
-
-
-def zona_bucket(z) -> str:
-    """Группа зоны ответственности для разбивки «Сутевого» (как в МиГ-6).
-    Горпроект / Заказчик / Остальные."""
-    z = ("" if z is None else str(z)).strip().lower()
-    if z in ("гп", "горпроект"):
-        return "Горпроект"
-    if z == "заказчик":
-        return "Заказчик"
-    return "Остальные"
 
 
 def _get_credentials():
